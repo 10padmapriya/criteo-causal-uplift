@@ -1,0 +1,22 @@
+# data never committed
+data/*
+!data/.gitkeep
+*.csv.gz
+*.parquet
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.ipynb_checkpoints/
+
+# spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# os
+.DS_Store

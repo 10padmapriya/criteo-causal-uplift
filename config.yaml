@@ -1,0 +1,42 @@
+# Single source of truth for seeds, paths and sample sizes.
+seed: 42
+
+data:
+  # Official mirror first, Criteo's own link second. The scikit-uplift S3 bucket
+  # behind sklift.datasets.fetch_criteo returns 404 as of Nov 2026.
+  urls:
+    - https://huggingface.co/datasets/criteo/criteo-uplift/resolve/main/criteo-research-uplift-v2.1.csv.gz
+    - http://go.criteo.net/criteo-research-uplift-v2.1.csv.gz
+  raw_csv: data/raw/criteo-research-uplift-v2.1.csv.gz
+  full_parquet: data/criteo_full.parquet
+  sample_parquet: data/criteo_10pct.parquet
+  summary_json: data/summary.json
+  sample_frac: 0.10
+
+# Published values the full data must match (Phase 0 done criteria).
+expected:
+  n_rows: 13979592
+  treated_share: 0.85
+  visit_rate: 0.047
+  conversion_rate: 0.0029
+  tolerance: 0.0005   # absolute, for the rates
+
+experiment:
+  treated_share_design: 0.85   # SRM is tested against this, never 0.50
+  alpha: 0.05
+  power: 0.80
+
+observational:
+  n_simulations: 100
+  propensity_clip: [0.05, 0.95]
+  trim_levels: [0.01, 0.05, 0.10]
+  caliper_sd_logit: 0.2
+
+uplift:
+  split: [0.6, 0.2, 0.2]
+  causal_forest_n: 2000000
+  n_bootstrap: 200
+
+spark:
+  driver_memory: 8g
+  shuffle_partitions: 64
