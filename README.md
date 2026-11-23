@@ -15,6 +15,7 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # add to ~/.zshrc
 make setup   # .venv with pinned requirements
 make java    # confirms Java 17 for PySpark
 make data    # downloads ~311 MB, writes data/criteo_full.parquet and data/criteo_10pct.parquet
+make spark   # PySpark full data counts, rates, SRM, feature means; cross checked against pandas
 make test    # pytest on synthetic data with known effects
 make all     # lint, test, data, and later every phase
 ```
@@ -28,7 +29,8 @@ Note: `sklift.datasets.fetch_criteo` points at an S3 bucket that now returns 404
 ```
 src/
   data.py           download, Parquet, 10% sample, published value checks
-  spark_checks.py   full data counts, rates, SRM, ITT in PySpark
+  spark_checks.py   full data counts, rates, SRM, feature means by arm in PySpark
+  synthetic.py      Criteo-like data with a known constant or heterogeneous effect
   experiment.py     SRM, balance, ITT, MDE, CUPED, effect on exposed, peeking sim
   observational.py  confounded sampler, true ATT, naive, RA, PSM, IPW, AIPW, DML
   uplift.py         S/T/X learners, causal forest, Qini, AUUC, GATES, calibration
