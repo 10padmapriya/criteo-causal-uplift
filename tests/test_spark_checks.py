@@ -66,28 +66,6 @@ def test_feature_means_flag_imbalance(spark, sim):
     assert m.loc["f3", "smd"] == pytest.approx(0.5, abs=0.05)
 
 
-def test_srm_passes_at_design_split_and_fails_against_half():
-    ok = spark_checks.srm_test(850_000, 150_000, p_treated=0.85)
-    assert ok["chi2"] == pytest.approx(0.0) and not ok["srm_flag"]
-    # same counts against the wrong null of 50/50 must scream
-    assert spark_checks.srm_test(850_000, 150_000, p_treated=0.5)["srm_flag"]
-
-
-def test_srm_detects_small_shift_at_scale():
-    # 0.849 vs 0.85 on 14M users is a real mismatch
-    n = 14_000_000
-    nt = int(0.849 * n)
-    r = spark_checks.srm_test(nt, n - nt)
-    assert r["srm_flag"] and r["p_value"] < 1e-10
-
-
-def test_srm_matches_hand_chi_square():
-    nt, nc = 8_600, 1_400
-    e_t, e_c = 8_500, 1_500
-    hand = (nt - e_t) ** 2 / e_t + (nc - e_c) ** 2 / e_c
-    assert spark_checks.srm_test(nt, nc)["chi2"] == pytest.approx(hand)
-
-
 def test_compare_with_pandas_flags_mismatch():
     res = spark_checks.compare_with_pandas(
         {"n_rows": 10, "visit_rate": 0.05}, {"n_rows": 11, "visit_rate": 0.05}

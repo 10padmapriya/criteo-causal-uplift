@@ -1,6 +1,6 @@
 # Data card: Criteo Uplift Prediction v2.1 (draft)
 
-Status: draft from Day 2. Numbers below come from `make data` (pandas) and `make spark` (PySpark) on the full file; both agree on every shared count and rate. Sections marked TODO fill in as later phases run.
+Status: draft, updated Day 3. Numbers below come from `make data` (pandas), `make spark` (PySpark) and `make experiment` on the full file; pandas and Spark agree on every shared count and rate. Sections marked TODO fill in as later phases run.
 
 ## Source
 
@@ -40,12 +40,14 @@ One user in one of several pooled randomized ad incrementality tests. Users were
 | Exposure rate among treated | 0.0360 | |
 | Exposed users in control | 0 | 0 by design |
 
-Outcome rates by arm (descriptive only; inference with CIs is Day 3):
+Intent to treat effect on the full data (`reports/tables/itt_full.csv`; unpooled SE, normal 95% CIs, delta method for the relative lift, Holm across the two outcomes):
 
-| | Treated | Control |
-|---|---|---|
-| Visit rate | 0.04854 | 0.03820 |
-| Conversion rate | 0.003089 | 0.001938 |
+| Outcome | Control | Treated | Lift (pts) [95% CI] | Relative lift [95% CI] | Holm p | MDE (relative, 80% power) |
+|---|---|---|---|---|---|---|
+| Visit | 3.820% | 4.854% | +1.034 [1.006, 1.063] | 27.1% [26.2%, 28.0%] | < 1e-300 | 1.1% |
+| Conversion | 0.194% | 0.309% | +0.115 [0.108, 0.122] | 59.4% [54.3%, 64.6%] | 3.2e-246 | 4.8% |
+
+On the 10% sample the visit lift is +1.075 pts [0.984, 1.165], consistent with the full data and about three times wider, as expected from sqrt(10).
 
 ## Integrity checks
 
@@ -56,12 +58,14 @@ Outcome rates by arm (descriptive only; inference with CIs is Day 3):
 
 ## Covariate balance by arm
 
-Full table: `reports/tables/feature_means_by_arm.csv`. The largest absolute standardized mean difference is 0.049 (f3); no feature crosses the usual 0.1 flag. Next largest: f6 (0.040), f5 (0.031).
+Full tables: `reports/tables/balance_full.csv` (pandas, with variance ratios) and `reports/tables/feature_means_by_arm.csv` (Spark). The largest absolute standardized mean difference is 0.049 (f3); no feature crosses the usual 0.1 flag. Next largest: f6 (0.040), f5 (0.031).
+
+Variance ratios (treated over control) are all inside Rubin's 0.5 to 2 band, so nothing is flagged, but several sit well above 1: f1 1.32, f5 1.22, f3 1.19. Treated users are consistently a little more spread out than control users.
 
 Two things worth noting for later phases:
 
 - With 14M rows, even these small differences are far outside sampling noise, so "statistically significant imbalance" is expected and uninformative. SMD, not p values, is the right yardstick here.
-- Spreads differ more than means in some features: f1 has SD 0.107 in treated against 0.093 in control, f5 0.437 against 0.396. The plan says the data pools several tests; if those tests had different treated shares or populations, pooling could produce this pattern. Day 3 balance work should report variance ratios alongside SMD and treat this as a finding, not a defect.
+- Spreads differ more than means in some features: f1 has SD 0.107 in treated against 0.093 in control, f5 0.437 against 0.396. The plan says the data pools several tests; if those tests had different treated shares or populations, pooling could produce this pattern. The variance ratios above quantify it; it is a finding to mention, not a defect that invalidates the experiment.
 
 ## Known traps
 
@@ -78,6 +82,5 @@ Intended: benchmarking experiment analysis, observational estimators against an 
 
 ## TODO as phases land
 
-- Day 3: SRM, SMD and variance ratios from `src/experiment.py`; ITT with CIs.
 - Day 4: CUPED CI shrinkage; effect on the exposed with bootstrap CI; Spark vs pandas cross validation of ITT.
 - Day 5 onward: describe the confounded samples built from this data.

@@ -16,9 +16,9 @@ from pathlib import Path
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
-from scipy import stats
 
 from src.data import FEATURES, ROOT, check_expected, load_config
+from src.experiment import srm_test
 
 
 def get_spark(
@@ -67,25 +67,6 @@ def counts_and_rates(sdf: DataFrame) -> dict:
     out["n_control"] = out["n_rows"] - out["n_treated"]
     out["treated_share"] = out["n_treated"] / out["n_rows"]
     return {k: (float(v) if isinstance(v, float) else v) for k, v in out.items()}
-
-
-def srm_test(n_treated: int, n_control: int, p_treated: float = 0.85) -> dict:
-    """Chi square goodness of fit of the observed split against the design split.
-
-    The design is 85/15, so the null is ``p_treated = 0.85``, never 0.50. A small
-    p value (convention: below 0.001) means assignment or logging is broken and no
-    downstream effect estimate should be trusted.
-    """
-    n = n_treated + n_control
-    expected = [n * p_treated, n * (1 - p_treated)]
-    chi2, p = stats.chisquare([n_treated, n_control], f_exp=expected)
-    return {
-        "p_treated_design": p_treated,
-        "p_treated_observed": n_treated / n,
-        "chi2": float(chi2),
-        "p_value": float(p),
-        "srm_flag": bool(p < 0.001),
-    }
 
 
 def feature_means_by_arm(sdf: DataFrame, features: list[str] = FEATURES) -> pd.DataFrame:

@@ -3,7 +3,7 @@ PYTHON ?= python3.11
 VENV   := .venv
 PY     := $(VENV)/bin/python
 
-.PHONY: help setup java data spark lint format test all
+.PHONY: help setup java data spark experiment lint format test all
 
 help:
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
@@ -34,5 +34,9 @@ test: ## run pytest
 spark: ## full data counts, rates, SRM and feature means in PySpark (Day 2)
 	$(PY) -m src.spark_checks
 
+experiment: ## SRM, balance, ITT with CIs, MDE, Holm on the 10% sample and the full data (Day 3)
+	$(PY) -m src.experiment
+	$(PY) -m src.experiment --full
+
 # Grows as phases land: experiment, observational, uplift, policy, report.
-all: lint test data spark ## full pipeline from a fresh clone
+all: lint test data spark experiment ## full pipeline from a fresh clone
